@@ -44,7 +44,9 @@ class Shoe:
             self.dealt.append(card)  # Add to the dealt list
             return card
         else:
+            print('No more cards in the shoe')
             return None  # Return None if there are no cards left to deal
+            
 
 
 
@@ -56,6 +58,7 @@ class Shoe:
             if card1 and card2:
                 return Hand([card1, card2],shoe=self )
             else:
+                print("not enough cards for a full deal")
                 return None  # In case there are not enough cards for a full deal
         else:
             print("Not enough cards to deal an initial hand.")
@@ -76,18 +79,47 @@ class Shoe:
         self.shuffle()  # Reshuffle the combined deck
 
 
+    def true_count(self):
+        running_count = 0
+        delt_cards = self.dealt
+        for card in delt_cards:
+            value = int(card.value)
+            if value > 9:
+                running_count += -1
+            if value < 7:
+                running_count += 1
+            # Calculate the total number of cards dealt
+        num_cards_dealt = len(self.dealt)
+
+    # Each deck has 52 cards
+        num_decks_dealt = num_cards_dealt / 52
+
+    # Calculate the number of decks remaining by subtracting the number of decks dealt from the total decks
+        num_decks_remaining = self.num_decks - num_decks_dealt
+
+    # Return the integer value of the remaining decks (rounded down)
+       
+        number_of_decks_remaining =  int(num_decks_remaining)
+
+        true_count = int(running_count/number_of_decks_remaining)
+
+        return true_count
+
+
 
 
 
 
 
 class Hand:
-    def __init__(self, cards, shoe, amount_of_bet=0):
+    def __init__(self, cards,shoe , Done=False,can_double = True, num_of_splits=0, amount_of_bet=0):
         self.cards = cards
         self.amount_of_bet = amount_of_bet  # Initialize the betting amount for this hand
         self.Done = False  # To track whether the player has stood
         self.shoe = shoe
         self.amount_of_bet = amount_of_bet
+        self.can_double = can_double
+        self.num_of_splits = num_of_splits
 
     def calculate_sum(self):
         hand_sum = 0
@@ -124,10 +156,12 @@ class Hand:
     def hit(self, shoe):
         """Add a card from the shoe to the hand."""
         new_card = shoe.deal()
+        self.can_double = False
         if new_card:
             self.cards.append(new_card)
         else:
-            print("No more cards left in the shoe.")
+            # print("No more cards left in the shoe.")
+            pass
 
     def stand(self):
         """Player stands; no more actions can be taken."""
@@ -136,8 +170,9 @@ class Hand:
     def split(self, shoe):
         """Split the hand into two hands if the first two cards have the same value."""
         if len(self.cards) == 2 and self.cards[0].value == self.cards[1].value:
-            hand1 = Hand([self.cards[0]], self.amount_of_bet)
-            hand2 = Hand([self.cards[1]], self.amount_of_bet)
+            num_of_splits = self.num_of_splits
+            hand1 = Hand([self.cards[0]],shoe= shoe, amount_of_bet=self.amount_of_bet,num_of_splits=num_of_splits+1)
+            hand2 = Hand([self.cards[1]], shoe= shoe, amount_of_bet=self.amount_of_bet,num_of_splits=num_of_splits+1)
             hand1.hit(shoe)
             hand2.hit(shoe)
             return hand1, hand2
@@ -182,10 +217,12 @@ if __name__ == '__main__':
 
     shoe = Shoe(num_decks=5) 
     hand1 = Hand(cards = cards, shoe= shoe)
+    first_card = shoe.cards[0]
+    print(first_card)
 
     
 
-    split1 , split2 = hand1.split(shoe=shoe)
+    # split1 , split2 = hand1.split(shoe=shoe)
 
-    print("first hand:",split1 , "  second hand: ",split2 )
+    # print("first hand:",split1 , "  second hand: ",split2 )
 

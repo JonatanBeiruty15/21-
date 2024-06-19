@@ -1,5 +1,5 @@
 import pandas as pd
-from class_of_cards import Card, Hand
+from class_of_cards import Card, Hand, Shoe
 
 
 
@@ -13,8 +13,8 @@ def find_blackjack_move(hand, dealer_card, true_count=0,Print =False):
     # Select the right sheet based on true count
     if true_count < -1:
         sheet_name = "-1"
-    elif true_count > 2:
-        sheet_name = "2"
+    elif true_count > 4:
+        sheet_name = "4"
     else:
         sheet_name = str(true_count)
     
@@ -62,15 +62,17 @@ def find_blackjack_move(hand, dealer_card, true_count=0,Print =False):
 if __name__ == '__main__':
 
 
-    card1 = Card('Hearts', 'Queen')
-    card2 = Card('Hearts', '3')
+    card1 = Card('Hearts', '2')
+    card2 = Card('Hearts', '8')
     card3 = Card('Hearts', '4')
 
-    dealers_card = Card('Hearts', 'King')
+    shoe = Shoe()
 
-    cards = [card1,card2,card3]
+    dealers_card = Card('Hearts', 'Ace')
 
-    hand = Hand(cards= cards)
+    cards = [card1,card2]
+
+    hand = Hand(cards= cards,shoe=shoe)
 
 
-    find_blackjack_move(hand= hand, dealer_card= dealers_card)
+    find_blackjack_move(hand= hand, dealer_card= dealers_card,true_count=-3,Print=True)
