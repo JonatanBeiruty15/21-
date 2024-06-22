@@ -7,6 +7,8 @@ import numpy as np
 from scipy.stats import norm
 from tqdm import tqdm 
 
+
+
 def plot_with_gaussian(data, title, filename, x_label, y_label, plot_with_gauss):
     # Calculate frequency using Counter
     data_freq = Counter(data)
@@ -45,8 +47,7 @@ def plot_with_gaussian(data, title, filename, x_label, y_label, plot_with_gauss)
 
 
 
-
-def game_simulation_one_player(num_of_rounds = 1000,num_decks=7):
+def game_simulation_one_player(num_of_rounds = 1000,num_decks=7,Print = False):
         # Initialize a player and a shoe
     start_time = time.time()
     lowest_balance = 0 
@@ -54,7 +55,7 @@ def game_simulation_one_player(num_of_rounds = 1000,num_decks=7):
     dealer = Dealer()
     shoe = Shoe(num_decks) 
     for round in range(num_of_rounds):
-        dealer.round(player=player,shoe = shoe, Print = True)
+        dealer.round(player=player,shoe = shoe, Print= Print, deck_penetration= 4)
         if player.balance < lowest_balance:
             lowest_balance = player.balance
 
@@ -65,9 +66,6 @@ def game_simulation_one_player(num_of_rounds = 1000,num_decks=7):
     # print(f"Simulation took: {duration:.2f} seconds")
 
     return [player.balance,lowest_balance]
-
-
-
 
 
 
@@ -135,12 +133,12 @@ def game_simulation_one_player(num_of_rounds = 1000,num_decks=7):
 
 
 
-def run_multiple_simulations(num_simulations=100, num_rounds=10, num_decks=7, plot_with_gauss=True):
+def run_multiple_simulations(num_simulations=100, num_rounds=10, num_decks=7, plot_with_gauss=True,Print = False):
     final_balances = []
     lowest_balances = []
 
     for i in tqdm(range(num_simulations), desc='Progress Bar'):
-        results = game_simulation_one_player(num_rounds, num_decks)
+        results = game_simulation_one_player(num_rounds, num_decks,Print=Print)
         final_balance = results[0]
         lowest_balance = results[1]
 
@@ -168,12 +166,5 @@ def run_multiple_simulations(num_simulations=100, num_rounds=10, num_decks=7, pl
 
 
 
-
-
-
-
-
-
-
 if __name__ == "__main__":
-    run_multiple_simulations(num_simulations=1,num_rounds= 5, num_decks=7,plot_with_gauss= True)
+    run_multiple_simulations(num_simulations=10,num_rounds= 30, num_decks=7,plot_with_gauss= True,Print= False)

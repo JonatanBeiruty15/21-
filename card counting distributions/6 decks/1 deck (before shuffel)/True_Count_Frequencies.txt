@@ -1,0 +1,14 @@
+True Count, Frequency, Percentage
+-4, 27, 0.00%
+-3, 1256, 0.13%
+-2, 16361, 1.64%
+-1, 112711, 11.27%
+0, 737245, 73.72%
+1, 114303, 11.43%
+2, 16860, 1.69%
+3, 1195, 0.12%
+4, 41, 0.00%
+5, 1, 0.00%
+
+Percentage of Positive Counts: 13.24%
+Percentage of Negative Counts: 13.04%

@@ -2,8 +2,21 @@ from class_of_cards import Shoe , Hand , Card
 from strategy import find_blackjack_move
 import time
 
+def rotate_first_to_last(lst):
+    if lst:  # Check if the list is not empty
+        first_element = lst.pop(0)  # Remove the first element
+        lst.append(first_element)  # Append it to the end of the list
+    return lst
 
-
+def replace_first_with_two(lst, new_first, new_second):
+    if type(lst) != list:
+        print('lst is not a list')
+        exit()
+    if lst:  # Check if the list is not empty
+        lst.pop(0)  # Remove the first element
+    lst.insert(0, new_second)  # Insert the second new element at the beginning
+    lst.insert(0, new_first)  # Insert the first new element at the beginning
+    return lst
 
 
 
@@ -11,7 +24,6 @@ class Player:
     def __init__(self, name, initial_balance=0):
         self.name = name
         self.hands = []
-        # self.is_busted = [False]   #if we want to limit a low value.
         self.balance = initial_balance
 
 
@@ -24,10 +36,14 @@ class Player:
     def player_turn(self, shoe, dealer_card,true_count ,initial_bet = 1):
         # Deal an initial hand and set a starting bet
         initial_hand = shoe.deal_initial_hand()
+
+        if true_count > 1: # bet speard as the true count.
+            initial_hand.amount_of_bet = true_count 
         
-        if initial_hand:
+        else:
             initial_hand.amount_of_bet = initial_bet
-            self.hands.append(initial_hand)
+
+        self.hands.append(initial_hand)
 
 
         if initial_hand.calculate_sum() == 21:
@@ -36,111 +52,97 @@ class Player:
 
             self.balance += initial_hand.amount_of_bet * 1.5
             # print(f'and now it is {self.balance}')
-            
-            return 'BJ'
+            initial_hand.status['active'] = False
+            initial_hand.status['for_dealer'] = 'BJ'
+            return 
 
 
 # Prepare to play all hands, initializing results list
-        results = []
-        hands_to_play = self.hands[:]
-        if len(hands_to_play) >1:
-            print(f'hands to play are {hands_to_play}      very weird')
-            exit()
-        # for hand in hands_to_play:
-        #     if not hand.Done:
-        #         self.play_with_hand(hand, dealer_card, shoe, results,true_count= true_count)
-        #     if hand.Done:
-        #         print(f'this hand was done: {hand}')
-        self.play_with_hand(initial_hand, dealer_card, shoe, results,true_count= true_count)
-                
-        # Collect results, excluding 'Bust' and include only hand details
-        final_results = [result for result in results if result != 'Bust']
-        if final_results == []:
-            # print('it is empty')
-            if results == []:
-                print('now')
-                print(f'initial hand  {initial_hand}')
-                exit()
 
-        return final_results
+        self.play_player_hands(dealer_card= dealer_card, shoe = shoe,true_count= true_count)
+
+     
     
+    
+                 
 
 
+    def play_player_hands(self, dealer_card, shoe,true_count):
 
-    def play_with_hand(self, hand, dealer_card, shoe, results,true_count):
-        if hand.calculate_sum() == 21:
-            hand.Done = True
-            results.append(hand)
+        hands = self.hands
+        if hands == [] or not hands[0].status['active']:
+            return 
 
-        if hand.Done:
-            return results
-
+        hand = hands[0]
         move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
         # print(f'should do {move_to_make}')
         if move_to_make == 'H':
             hand.hit(shoe)
             if hand.calculate_sum() > 21:
-                # print('too many')
-                # print(f'balance before {self.balance}')
                 self.balance -= hand.amount_of_bet  
-                # print(f'balance after {self.balance}')
-                hand.Done = True
-                results.append('Bust')
+                self.hands.remove(hand)  # Use remove instead of pop
+
+            if hand.calculate_sum() == 21:
+                hand.status['active'] = False
+                rotate_first_to_last(self.hands)
+
+
             else:
-                # Continue playing if the hand is not bust and not done
-                true_count = shoe.true_count()
-                return self.play_with_hand(hand, dealer_card, shoe, results,true_count)
+                pass
+
         
         elif move_to_make == 'S':
             hand.stand()
-            results.append(hand)
+            self.play_player_hands(dealer_card= dealer_card, shoe=shoe,true_count= true_count)
 
         elif move_to_make == 'D':
-            if hand.can_double == True:
+            if hand.status['can_double']:
                 hand.double_down(shoe)
                 if hand.calculate_sum() > 21:
-                    # print('too many')
-                    # print(f'balance before {self.balance}')
                     self.balance -= hand.amount_of_bet
-                    # print(f'balance after {self.balance}')
-                    hand.Done = True
-                    results.append('Bust')
-                else:
-                    results.append(hand)
-            else: # can't double so we split
+                    self.hands.remove(hand)  # Use remove instead of pop
+
+                if hand.calculate_sum() == 21:
+                    hand.status['active'] = False
+                    rotate_first_to_last(self.hands)
+
+
+            else: # can't double so we hit
                 hand.hit(shoe)
                 if hand.calculate_sum() > 21:
-                    # print('too many')
-                    # print(f'balance before {self.balance}')
                     self.balance -= hand.amount_of_bet  
-                    # print(f'balance after {self.balance}')
-                    hand.Done = True
-                    results.append('Bust')
+                    self.hands.remove(hand)  # Use remove instead of pop
+
+
+                if hand.calculate_sum() == 21:
+                    hand.status['active'] = False
+                    rotate_first_to_last(self.hands)
+
+
                 else:
-                    # Continue playing if the hand is not bust and not done
-                    true_count = shoe.true_count()
-                    return self.play_with_hand(hand, dealer_card, shoe, results,true_count)
+                    pass
                 
 
         elif move_to_make == 'SP':
             
             # print("split timeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
             hand1, hand2 = hand.split(shoe)  # This should return two new hands
+            # print(f'hand 1 {hand1} and hand 2 {hand2}')
             if hand2:  # If a split was successful and two hands were returned
-                true_count = shoe.true_count()
-       
-                self.play_with_hand(hand1, dealer_card, shoe, results,true_count)
-                self.play_with_hand(hand2, dealer_card, shoe, results,true_count)
+                replace_first_with_two(lst= self.hands,new_first=hand1,new_second=hand2)
+    
+  
             else:
-                # If split fails (usually due to non-matching cards), treat as a hit
-                return self.play_with_hand(hand, dealer_card, shoe, results,true_count)
+                print('problem with splitting')
+                exit()
+
         else:
             print("Invalid move.")
-            return results
-        if results == []:
-            print('results are emptyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
             exit()
-        return results
+        
+
+        true_count = shoe.true_count()
+        self.play_player_hands(dealer_card= dealer_card, shoe=shoe,true_count= true_count) 
 
 
     def new_round(self):
@@ -161,10 +163,14 @@ class Dealer(Player):
 
 
 
+    def calculate_money(self,players):
+        pass
+
     def round(self,shoe,player, Print = False,deck_penetration = 3,num_of_decks = 7):
+
         num_of_cards_before_shuffel = int(52 * deck_penetration)
         if num_of_decks *52 < num_of_cards_before_shuffel:
-            print('need to shuffel before')
+            print('not enough cards for this deck penetration')
             exit()
   
         if len(shoe.dealt) > num_of_cards_before_shuffel:
@@ -173,28 +179,33 @@ class Dealer(Player):
         dealer_card = shoe.deal()
         dealer_hand = Hand(cards=[dealer_card],shoe=shoe)
         true_count = shoe.true_count()
-        player_hands = player.player_turn(shoe= shoe,dealer_card = dealer_card,true_count=true_count)
+
+
+
+        player.player_turn(shoe= shoe,dealer_card = dealer_card,true_count=true_count)
 
         if Print:
-            print("player's hands:",player_hands)
+            print("player's hands:",player.hands)
             print(f'dealer has: {dealer_card}')
             print(f'balance before = {player.balance}')
             print(f'true count is:  {true_count}')
             
 
-    
-        if player_hands == 'BJ':
-            player.new_round()
-            self.new_round()
-            if Print:
-                print("player had BJ")
-                print(f"Player's balance after turn: {player.balance}")
-                print('\n')
-                print('\n')
-            return 
-
-
+        player_hands = player.hands
         if not player_hands == []:
+
+            if player_hands[0].status['for_dealer'] == 'BJ':
+                player.new_round()
+                self.new_round()
+                if Print:
+                    print("player had BJ")
+                    print(f"Player's balance after turn: {player.balance}")
+                    print('\n')
+                    print('\n')
+                return 
+
+
+        
             while dealer_hand.calculate_sum() < 17:
                 dealer_hand.hit(shoe=shoe)
                 if Print:
@@ -211,7 +222,6 @@ class Dealer(Player):
                     player.new_round()
                     self.new_round()
 
-                    # print(f"Player's balance after turn: {player.balance}")
                     if Print:
                         print('\n')
                         print('\n')
@@ -237,8 +247,6 @@ class Dealer(Player):
         player.new_round()
         self.new_round()
 
-
-        # print(f"Player's balance after turn: {player.balance}")
         if Print:
             print(f'at the end player has {player.balance}')
             print('\n')

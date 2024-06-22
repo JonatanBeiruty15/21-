@@ -2,6 +2,11 @@ import random
 
 
 
+
+
+
+
+
 class Card:
     def __init__(self, suit, value):
         self.suit = suit
@@ -112,14 +117,14 @@ class Shoe:
 
 
 class Hand:
-    def __init__(self, cards,shoe , Done=False,can_double = True, num_of_splits=0, amount_of_bet=0):
+    def __init__(self, cards,shoe , Status = {}, amount_of_bet=0):
         self.cards = cards
         self.amount_of_bet = amount_of_bet  # Initialize the betting amount for this hand
         self.Done = False  # To track whether the player has stood
         self.shoe = shoe
+        self.status = {'active' : True, 'can_double': True,'num_of_splits':0,'for_dealer': None}
         self.amount_of_bet = amount_of_bet
-        self.can_double = can_double
-        self.num_of_splits = num_of_splits
+
 
     def calculate_sum(self):
         hand_sum = 0
@@ -156,25 +161,34 @@ class Hand:
     def hit(self, shoe):
         """Add a card from the shoe to the hand."""
         new_card = shoe.deal()
-        self.can_double = False
+        # self.can_double = False
+        self.status['can_double'] = False
         if new_card:
             self.cards.append(new_card)
         else:
-            # print("No more cards left in the shoe.")
             pass
 
     def stand(self):
         """Player stands; no more actions can be taken."""
-        self.Done = True
+        self.status['active'] = False
 
     def split(self, shoe):
-        """Split the hand into two hands if the first two cards have the same value."""
+        """Split the hand into two hands if the first two cards have the same value.
+        we are allowed to double down after Splitting
+        
+        
+        """
         if len(self.cards) == 2 and self.cards[0].value == self.cards[1].value:
-            num_of_splits = self.num_of_splits
-            hand1 = Hand([self.cards[0]],shoe= shoe, amount_of_bet=self.amount_of_bet,num_of_splits=num_of_splits+1)
-            hand2 = Hand([self.cards[1]], shoe= shoe, amount_of_bet=self.amount_of_bet,num_of_splits=num_of_splits+1)
+
+            num_of_splits = self.status['num_of_splits'] + 1
+            status = {'active':True,'can_double':True , 'num_of_splits':num_of_splits,'for_dealer':None}
+            hand1 = Hand([self.cards[0]],shoe= shoe, amount_of_bet=self.amount_of_bet,Status= status)
+            hand2 = Hand([self.cards[1]], shoe= shoe, amount_of_bet=self.amount_of_bet,Status= status)
             hand1.hit(shoe)
             hand2.hit(shoe)
+            hand1.status['can_double'] = True
+            hand2.status['can_double'] = True
+            
             return hand1, hand2
         else:
             print("Cannot split this hand.")
@@ -184,7 +198,9 @@ class Hand:
         """Double the bet of the hand."""
         self.amount_of_bet *= 2
         self.hit(shoe)  # Assuming you hit when doubling down
-        self.Done = True
+    
+        self.status['active'] = False
+        
         
 
 
