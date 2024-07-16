@@ -1,6 +1,6 @@
-from class_of_cards import Shoe , Hand , Card
-from strategy import find_blackjack_move
-import time
+from class_of_cards import Shoe , Hand , Card 
+from strategy import find_blackjack_move 
+
 
 def rotate_first_to_last(lst):
     if lst:  # Check if the list is not empty
@@ -31,7 +31,7 @@ class Player:
         #add card counting 
         pass
     
-    
+
 
     def player_turn(self, shoe, dealer_card,true_count ,initial_bet = 1):
         # Deal an initial hand and set a starting bet
@@ -75,7 +75,7 @@ class Player:
 
         hand = hands[0]
         move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
-        # print(f'should do {move_to_make}')
+
         if move_to_make == 'H':
             hand.hit(shoe)
             if hand.calculate_sum() > 21:
@@ -125,7 +125,7 @@ class Player:
 
         elif move_to_make == 'SP':
             
-            # print("split timeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
+    
             hand1, hand2 = hand.split(shoe)  # This should return two new hands
             # print(f'hand 1 {hand1} and hand 2 {hand2}')
             if hand2:  # If a split was successful and two hands were returned
@@ -258,36 +258,39 @@ class Dealer(Player):
 
 
 
-
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
 
 
-    card1 = Card('Hearts', '3')
-    card2 = Card('Hearts', '3')
-
+    card1 = Card('Hearts', '6')
+    card2 = Card('Hearts', '10')
+    dealer_card = Card('Hearts','10')
+    
+    shoe = Shoe()
+    true_count = 0
+    
     cards = [card1,card2]
     
-      
-
-    # Initialize a player and a shoe
-    player = Player(name="John Doe", initial_balance=0)
-    dealer = Dealer()
-    shoe = Shoe(num_decks=5) 
-    print("start")
-    dealer.round(player=player,shoe=shoe)
+   
 
 
 
+    # move = 'H'
+
+    # # new_hands = play_what_is_known(player=jb,dealer_hand=dealer_hand,shoe=shoe,true_count=true_count )
+    
+    # # test_first_move(player=jb,dealer_hand=dealer_hand,move='H',shoe=shoe,true_count=true_count)
+    # avrage_balance = test_a_move_with_dealer_avrage(players_cards=cards,dealer_card=dealer_card,move_to_test= move 
+    #                                   ,true_count=true_count,Print=False,repetitions=1000)
+     
+
+    # print(f'balance is {avrage_balance}')
+    # print('\n')
+    
 
 
+
+
+   
 
 
 

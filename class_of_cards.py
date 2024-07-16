@@ -1,4 +1,5 @@
 import random
+import time
 
 
 
@@ -22,22 +23,56 @@ class Card:
         # Adjust the representation to show numeric value for face cards if needed
         return f"{self.value} of {self.suit}"
 
+
+
+
 class Deck:
     suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
     values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace']
 
-    def __init__(self):
-        self.cards = [Card(suit, value) for suit in self.suits for value in self.values]
+    def __init__(self, high_low=False):
+        if high_low:
+            self.high_cards, self.low_cards, self.medium_cards = self._create_high_low_medium_lists()
+        else:
+            self.cards = [Card(suit, value) for suit in self.suits for value in self.values]
+
+    def _create_high_low_medium_lists(self):
+        # Convert values to the actual values assigned in the Card class
+        high_cards = [Card(suit, value) for suit in self.suits for value in self.values if value in ['10', 'Jack', 'Queen', 'King', 'Ace']]
+        low_cards = [Card(suit, value) for suit in self.suits for value in ['2', '3', '4', '5', '6']]
+        medium_cards = [Card(suit, value) for suit in self.suits for value in ['7', '8', '9']]
+
+        return high_cards, low_cards, medium_cards
+
+
+
+
 
 
 
 class Shoe:
-    def __init__(self, num_decks=6):
-        self.num_decks = num_decks
-        self.decks = [Deck() for _ in range(num_decks)]
-        self.cards = [card for deck in self.decks for card in deck.cards]
-        self.dealt = []  # List to store dealt cards
-        self.shuffle()
+    def __init__(self, num_decks=6,deck_list = None):
+        if deck_list == None:
+            self.num_decks = num_decks
+            self.decks = [Deck() for _ in range(num_decks)]
+            self.cards = [card for deck in self.decks for card in deck.cards]
+            self.dealt = []  # List to store dealt cards
+            self.shuffle()
+
+        else:
+            #check if deck is type Deck
+            self.num_decks = num_decks
+            self.decks = [Deck() for _ in range(num_decks - 1)]  # Create additional decks
+            self.cards = deck_list # Start with the cards from deck1
+
+            # Now add the cards from the additional decks
+            for deck in self.decks:
+                self.cards.extend(deck.cards)
+
+            self.dealt = [] # List to store dealt cards
+            self.shuffle()
+
+
 
     def shuffle(self):
         random.shuffle(self.cards)
@@ -113,11 +148,77 @@ class Shoe:
 
 
 
+def generate_shoe_with_true_count(true_count: int, num_of_decks: int):
+    """
+    Generates a random shoe with a given true count.
+    """
+
+    running_count = true_count * num_of_decks
+    if abs(running_count) > 18:
+        raise ValueError("Running count exceeds the allowed limit of ±18.")
+    
+
+    noise1 = random.randint(-3, 3)  
+    num_of_high_cards = int(abs(running_count) / 2) + noise1
+    
+    if running_count + num_of_high_cards > 18:
+        num_of_high_cards = 18 - running_count  # Adjust high cards to ensure the sum does not exceed 18
+
+     
+    noise2 = random.randint(-3, 3)  
+    num_of_medium_cards = int((abs(running_count) + 2 * num_of_high_cards) / 3) + noise2
+
+
+    if num_of_high_cards < 0 :
+        num_of_high_cards = 0
+    if num_of_medium_cards < 0:
+        num_of_medium_cards = random.randint(0, 5) 
+
+    num_of_low_cards = num_of_high_cards 
+
+
+    if running_count >= 0:
+        num_of_low_cards += running_count
+    else:
+        num_of_high_cards += -running_count
+
+
+    
+    #creating the show
+    deck1 = Deck(high_low=True)
+    high_card_list = deck1.high_cards
+    low_card_list = deck1.low_cards
+    medium_card_list = deck1.medium_cards
+
+        # Shuffle each list to remove cards randomly
+    random.shuffle(high_card_list)
+    random.shuffle(low_card_list)
+    random.shuffle(medium_card_list)
+
+    # Remove the specified number of cards
+    removed_high_cards = high_card_list[:20- num_of_high_cards]
+    removed_low_cards = low_card_list[:20- num_of_low_cards]
+    removed_medium_cards = medium_card_list[:12-num_of_medium_cards]
+
+
+
+    # Combine the removed cards
+    cards = removed_high_cards + removed_low_cards + removed_medium_cards
+
+    # Shuffle the combined list of removed cards
+    random.shuffle(cards)
+
+    shoe_with_true_count = Shoe(num_decks= num_of_decks, deck_list= cards)
+    return shoe_with_true_count
+
+
+
+
 
 
 
 class Hand:
-    def __init__(self, cards,shoe , Status = {}, amount_of_bet=0):
+    def __init__(self, cards,shoe = Shoe() , Status = {}, amount_of_bet=0):
         self.cards = cards
         self.amount_of_bet = amount_of_bet  # Initialize the betting amount for this hand
         self.Done = False  # To track whether the player has stood
@@ -143,6 +244,9 @@ class Hand:
         if len(self.cards) > 2:
             return str(self.calculate_sum())
         
+        if len(self.cards)<2:
+            print('for hand type you need 2 cards')
+            exit()
         card1, card2 = self.cards[0], self.cards[1]
         if card1.value == 11 and card2.value == 11:
             return "A,A"
@@ -160,13 +264,14 @@ class Hand:
 
     def hit(self, shoe):
         """Add a card from the shoe to the hand."""
+        # if self.calculate_sum()<21:
         new_card = shoe.deal()
-        # self.can_double = False
+            # self.can_double = False
         self.status['can_double'] = False
         if new_card:
             self.cards.append(new_card)
-        else:
-            pass
+        # else:
+        #     raise Exception('Sum is over 21, cannot hit.')
 
     def stand(self):
         """Player stands; no more actions can be taken."""
@@ -196,49 +301,122 @@ class Hand:
 
     def double_down(self,shoe):
         """Double the bet of the hand."""
-        self.amount_of_bet *= 2
-        self.hit(shoe)  # Assuming you hit when doubling down
+        if self.status['can_double'] == True:
+
+            self.amount_of_bet *= 2
+            self.hit(shoe)  # Assuming you hit when doubling down
+        
+            self.status['active'] = False
+        else: 
+
+            raise Exception('Cant double')
+
+
+    def play_move(self,move_to_make,shoe):
+        """
+        plays the move with this hand
+        no split
+        if can't double hit        
+        """
+        if move_to_make == 'S':
+            self.stand()
+
+        elif move_to_make == 'H':
+            self.hit(shoe=shoe)        
+
+        elif move_to_make == 'D':
+            if self.status['can_double'] == True:
+                self.double_down(shoe=shoe)
+            else:
+                self.hit(shoe=shoe) 
+
+        else:
+            
+            raise Exception(f'{move_to_make} is Not a a legal move')
+            
+
+        
+        return
+
+
+
+
+
+
+
+def create_solid_hand(total_value:int):
+    '''
+    creates a list of 2 cards
+    of solid type meaning no Ace or to same cards
+
+    '''
+    if total_value < 5 or total_value > 19 or type(total_value) != int:
+        raise ValueError("Total value must be between 5 and 19 and an integer.")
     
-        self.status['active'] = False
-        
-        
+    card_values = {
+        '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+        '10': 10, 'Jack': 10, 'Queen': 10, 'King': 10
+    }
+
+    if total_value > 11:
+        card1 = Card(suit='Hearts',value=10)
+    else:
+        card1 = Card(suit='Hearts',value=2)
+
+
+    second_card_value = total_value - card1.value
+    second_card_value = str(second_card_value)
+    card2 = Card(suit='Hearts',value=second_card_value)
+
+    cards = [card1,card2]
+    return cards
 
 
 
 
+def create_soft_hand(second_card_value:int):
+    '''
+    creates a list of 2 cards that the  first is an ACE
+    '''
+    if second_card_value < 2 or second_card_value > 9 or type(second_card_value) != int:
+        raise ValueError("The second card's value must be between 2 and 9 and an integer.")
+
+    card1 = Card(suit='Hearts',value='Ace')
+    card2 = Card(suit='Hearts',value= str(second_card_value))
+
+    cards = [card1,card2]
+    return cards
 
 
+def create_a_split_hand(card_value:int):
+
+    '''
+    creates a list of 2 cards of the same value
+    '''
+    if card_value < 2 or card_value > 10 or type(card_value) != int:
+        raise ValueError("The  card's value must be between 2 and 10 and an integer.")
 
 
-
-
-
-
-
+    card = Card(suit='Hearts',value= str(card_value))
+    cards = [card,card]
+    return cards
 
 
 
 
 if __name__ == '__main__':
-
-    card1 = Card('Hearts', '3')
-    card2 = Card('Hearts', '3')
+    total = 9
+    # cards = create_solid_hand(total_value=total)
+    cards = create_soft_hand(total)
+    
+    print(cards)
+ 
 
     
 
-    card3 = Card('Hearts', 'Ace')
-    Card4 = Card('Spades', 'King')
 
-    cards = [card1,card2]
+        
 
-    shoe = Shoe(num_decks=5) 
-    hand1 = Hand(cards = cards, shoe= shoe)
-    first_card = shoe.cards[0]
-    print(first_card)
 
-    
 
-    # split1 , split2 = hand1.split(shoe=shoe)
-
-    # print("first hand:",split1 , "  second hand: ",split2 )
 
