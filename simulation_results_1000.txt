@@ -1,3 +1,0 @@
-Percentage of simulations with a positive balance: 50.7%
-Average final balance: -0.742
-Average lowest balance: -9.989

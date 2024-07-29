@@ -225,6 +225,7 @@ def build_a_strategy_table(true_count=0,repetitions = 200):
         'Split Hands': (create_a_split_hand, range(2, 11), 'Split Hand ')
     }
 
+
  
     for hand_type, (hand_creator, range_values, key_prefix) in tqdm(hand_types.items(), desc="Processing hand types"):
         # Adjust moves for split hands
@@ -378,5 +379,5 @@ def csv_to_excel(csv_file_path):
 
 if __name__ == '__main__':
 
-    build_a_strategy_table(repetitions=1000)
+    build_a_strategy_table(repetitions=1000,true_count=1)
     # csv_to_excel('blackjack_strategy_results_true_count_0.csv')
