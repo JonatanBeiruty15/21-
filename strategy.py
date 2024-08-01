@@ -55,15 +55,15 @@ def find_blackjack_move(hand, dealer_card, true_count=0,Print =False):
 
 def find_move_test(hand, dealer_card, true_count=0,Print =False):
 # Assuming Card is defined elsewhere with attributes suit and value
-    # strategy_sheets = pd.ExcelFile('test_table.xlsx')
+    
     strategy_sheets = pd.ExcelFile('test_table.xlsx')
     
     # Select the right sheet based on true count
     # print(f'the true count is:{true_count}')
     if true_count < -1:
         sheet_name = "-1"
-    elif true_count > 4:
-        sheet_name = "4"
+    elif true_count > 3:
+        sheet_name = "3"
     else:
         sheet_name = str(true_count)
     
@@ -113,7 +113,7 @@ def write_move_to_excel(player_cards, dealer_card, move_to_write, true_count=0, 
     player_hand = Hand(cards=player_cards)
 
     workbook = load_workbook(excel_path)
-    sheet_name = str(true_count) if -1 < true_count < 5 else "-1" if true_count < -1 else "4"
+    sheet_name = str(true_count) if -5 < true_count < 5 else "-1" if true_count < -4 else "4"
     sheet = workbook[sheet_name]
 
     # Read the specific sheet using pandas for easy location of the hand type

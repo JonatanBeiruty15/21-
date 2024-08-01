@@ -1,5 +1,5 @@
 from class_of_cards import Shoe , Hand , Card 
-from strategy import find_blackjack_move 
+from strategy import find_blackjack_move ,find_move_test
 
 
 def rotate_first_to_last(lst):
@@ -74,7 +74,11 @@ class Player:
             return 
 
         hand = hands[0]
-        move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
+        # move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
+        '''
+        In test I use the find_move_test fucntion
+        '''
+        move_to_make = find_move_test(hand=hand, dealer_card=dealer_card, true_count=true_count)
 
         if move_to_make == 'H':
             hand.hit(shoe)
@@ -137,6 +141,7 @@ class Player:
                 exit()
 
         else:
+            print(f'tried to do {move_to_make}')
             print("Invalid move.")
             exit()
         

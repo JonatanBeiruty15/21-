@@ -5,7 +5,7 @@ import random
 from class_of_players import Player , Dealer
 import csv
 from tqdm import tqdm  # This imports the tqdm class for progress bars
-
+import json
 import os
 import pandas as pd
 from io import StringIO
@@ -211,6 +211,8 @@ def test_a_move_with_dealer_avrage(players_cards, dealer_card, move_to_test, tru
 
 
 def build_a_strategy_table(true_count=0,repetitions = 200):
+    backup_file = f'back_up_results_true_count_{true_count}.txt'  # Including true_count in filename
+
     results = {
         'Solid Hands': {f'Solid Hand {total}': {} for total in range(19, 4, -1)},
         'Soft Hands': {f'Soft Hand A,{second_card_value}': {} for second_card_value in range(2, 10)},
@@ -240,7 +242,7 @@ def build_a_strategy_table(true_count=0,repetitions = 200):
             if card3.suit != 'Hearts' or card4.suit != 'Hearts':
                 print(card3,card4)
                 exit()
-            for dealer_value in range(2, 12):  # Including Ace as 11
+            for dealer_value in tqdm(range(2, 12), desc="Dealer Card Progress", leave=False):  # Including Ace as 11
                 dealer_card = Card(suit='Hearts', value= str(dealer_value))
                 if dealer_value == 11:
                     dealer_card = Card(suit='Hearts', value='Ace')
@@ -253,6 +255,8 @@ def build_a_strategy_table(true_count=0,repetitions = 200):
 
                 write_move_to_excel(player_cards=cards,dealer_card=dealer_card,move_to_write=best_move,
                                     true_count=true_count)
+                with open(backup_file, 'w') as f:
+                    json.dump(results, f, indent=4)
 
     save_results_to_csv(results= results,true_count=true_count)
 
@@ -296,21 +300,21 @@ def determine_best_move(cards, dealer_card, moves, true_count, repetitions, epsi
             best_move = move
 
     # Check if other moves are close to the best balance within epsilon
-    close_moves = [move for move, balance in balance_details.items() if (best_balance - balance) < epsilon ]
+    # close_moves = [move for move, balance in balance_details.items() if (best_balance - balance) < epsilon ]
 
     # If close moves are found, rerun with higher repetitions for these moves
-    if close_moves:
-        # print(f"Re-evaluating moves: {close_moves} due to close balances.")
-        for move in close_moves:
-            # Recalculate with increased repetitions
-            new_repetitions = min(5000, repetitions * 2)
-            average_balance = test_a_move_with_dealer_avrage(players_cards=cards,
-                                                             dealer_card=dealer_card, move_to_test=move, 
-                                                             true_count=true_count, repetitions=new_repetitions)
-            # Update if a new better result is found
-            if average_balance > best_balance:
-                best_balance = average_balance
-                best_move = move
+    # if close_moves:
+    #     # print(f"Re-evaluating moves: {close_moves} due to close balances.")
+    #     for move in close_moves:
+    #         # Recalculate with increased repetitions
+    #         new_repetitions = min(5000, repetitions * 2)
+    #         average_balance = test_a_move_with_dealer_avrage(players_cards=cards,
+    #                                                          dealer_card=dealer_card, move_to_test=move, 
+    #                                                          true_count=true_count, repetitions=new_repetitions)
+    #         # Update if a new better result is found
+    #         if average_balance > best_balance:
+    #             best_balance = average_balance
+    #             best_move = move
         # print(f"Updated best move to {move} with a balance of {best_balance} after extended simulation.")
 
     # Handle the case where no best move is determined
@@ -379,5 +383,5 @@ def csv_to_excel(csv_file_path):
 
 if __name__ == '__main__':
 
-    build_a_strategy_table(repetitions=1000,true_count=1)
+    build_a_strategy_table(repetitions=1,true_count=-3 )
     # csv_to_excel('blackjack_strategy_results_true_count_0.csv')
