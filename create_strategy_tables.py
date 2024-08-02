@@ -383,5 +383,5 @@ def csv_to_excel(csv_file_path):
 
 if __name__ == '__main__':
 
-    build_a_strategy_table(repetitions=1,true_count=-3 )
+    build_a_strategy_table(repetitions=4000,true_count=-1 )
     # csv_to_excel('blackjack_strategy_results_true_count_0.csv')
