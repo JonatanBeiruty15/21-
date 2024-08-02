@@ -74,11 +74,11 @@ class Player:
             return 
 
         hand = hands[0]
-        # move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
+        move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
         '''
         In test I use the find_move_test fucntion
         '''
-        move_to_make = find_move_test(hand=hand, dealer_card=dealer_card, true_count=true_count)
+        # move_to_make = find_move_test(hand=hand, dealer_card=dealer_card, true_count=true_count)
 
         if move_to_make == 'H':
             hand.hit(shoe)
@@ -190,7 +190,7 @@ class Dealer(Player):
         player.player_turn(shoe= shoe,dealer_card = dealer_card,true_count=true_count)
 
         if Print:
-            print("player's hands:",player.hands)
+            print(f"{player.name}'s hands:",player.hands)
             print(f'dealer has: {dealer_card}')
             print(f'balance before = {player.balance}')
             print(f'true count is:  {true_count}')
@@ -221,7 +221,7 @@ class Dealer(Player):
                         bet = hand.amount_of_bet
                         player.balance += bet
                     if Print:
-                        print(f'now player has: {player.balance}')
+                        print(f'now {player.name} has: {player.balance}')
                 
 
                     player.new_round()
@@ -246,14 +246,14 @@ class Dealer(Player):
 
 
             if Print:
-                print(f'now player has {player.balance}')
+                print(f'now {player.name} has {player.balance}')
 
 
         player.new_round()
         self.new_round()
 
         if Print:
-            print(f'at the end player has {player.balance}')
+            print(f'at the end {player.name} has {player.balance}')
             print('\n')
             print('\n')
 
@@ -278,19 +278,6 @@ if __name__ == '__main__':
    
 
 
-
-    # move = 'H'
-
-    # # new_hands = play_what_is_known(player=jb,dealer_hand=dealer_hand,shoe=shoe,true_count=true_count )
-    
-    # # test_first_move(player=jb,dealer_hand=dealer_hand,move='H',shoe=shoe,true_count=true_count)
-    # avrage_balance = test_a_move_with_dealer_avrage(players_cards=cards,dealer_card=dealer_card,move_to_test= move 
-    #                                   ,true_count=true_count,Print=False,repetitions=1000)
-     
-
-    # print(f'balance is {avrage_balance}')
-    # print('\n')
-    
 
 
 

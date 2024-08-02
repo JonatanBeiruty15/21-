@@ -240,8 +240,28 @@ class Hand:
             ace_count -= 1
         return hand_sum
 
+
+
     def type_of_hand(self):
+        
         if len(self.cards) > 2:
+            cards_values = [card.value for card in self.cards]
+            if 11 in cards_values:
+                hand_sum = 0
+                # we start counting with -1 aces because we want to check if we can use this ace as 11
+                ace_count = -1
+                for card in self.cards:
+                    hand_sum += int(card.value)
+                    if card.value == 11:  # Assuming Ace is initially 11
+                        ace_count += 1
+                # Adjust for Aces if the sum exceeds 21
+                while hand_sum > 21 and ace_count:
+                    hand_sum -= 10
+                    ace_count -= 1
+
+                if hand_sum < 22:
+                    return f"A,{str(hand_sum-11)}"
+
             return str(self.calculate_sum())
         
         if len(self.cards)<2:
@@ -405,12 +425,15 @@ def create_a_split_hand(card_value:int):
 
 
 if __name__ == '__main__':
-    total = 9
-    # cards = create_solid_hand(total_value=total)
-    cards = create_soft_hand(total)
-    
-    print(cards)
- 
+    card1 = Card(suit='Hearts',value='Ace')
+    card2 = Card(suit='Hearts',value='2')
+    card3 = Card(suit='Hearts',value='3')
+
+    cards = [card1,card1,card1,card1,card3,card3,card3,card3,card3,card3]
+
+    hand = Hand(cards=cards)
+
+    print(hand.type_of_hand())
 
     
 

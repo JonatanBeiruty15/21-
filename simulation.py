@@ -60,7 +60,7 @@ def game_simulation_one_player(num_of_rounds = 1000,num_decks=7,Print = False,de
             lowest_balance = player.balance
 
 
-    shoe.reset_shoe
+    
 
     duration = time.time() - start_time
     # print(f"Simulation took: {duration:.2f} seconds")
@@ -69,7 +69,7 @@ def game_simulation_one_player(num_of_rounds = 1000,num_decks=7,Print = False,de
 
 
 
-def run_multiple_simulations(num_simulations=100, num_rounds=10, num_decks=7, plot_with_gauss=True,Print = False,deck_penetration= 4):
+def run_multiple_simulations_one_player(num_simulations=100, num_rounds=10, num_decks=7, plot_with_gauss=True,Print = False,deck_penetration= 4):
     final_balances = []
     lowest_balances = []
 
@@ -99,8 +99,66 @@ def run_multiple_simulations(num_simulations=100, num_rounds=10, num_decks=7, pl
 
 
 
+def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=False, deck_penetration=4, num_of_players=4):
+    # Initialize players and a shoe
+    start_time = time.time()
+    lowest_balance = [0] * num_of_players
+    players = [Player(name=f"Player {i+1}", initial_balance=0) for i in range(num_of_players)]
+    dealer = Dealer()
+    shoe = Shoe(num_decks)
+
+    for round in range(num_of_rounds):
+        for i, player in enumerate(players):
+            dealer.round(player=player, shoe=shoe, Print=Print, deck_penetration=deck_penetration, num_of_decks=num_decks)
+            if player.balance < lowest_balance[i]:
+                lowest_balance[i] = player.balance
+
+    duration = time.time() - start_time
+    # print(f"Simulation took: {duration:.2f} seconds")
+
+    final_balances = [player.balance for player in players]
+    return final_balances, lowest_balance
+
+
+
+
+def run_multiple_simulations_multiple_players(num_simulations=100, num_rounds=10, num_decks=7, num_of_players=4, plot_with_gauss=True, Print=False, deck_penetration=4):
+    final_balances = [[] for _ in range(num_of_players)]
+    lowest_balances = [[] for _ in range(num_of_players)]
+
+    for i in tqdm(range(num_simulations), desc='Progress Bar'):
+        results = game_simulation_multiple_players(num_rounds, num_decks, Print=Print, deck_penetration=deck_penetration, num_of_players=num_of_players)
+        final_balance = results[0]
+        lowest_balance = results[1]
+
+        for j in range(num_of_players):
+            final_balances[j].append(final_balance[j])
+            lowest_balances[j].append(lowest_balance[j])
+
+    # Calculate averages
+    average_final_balances = [sum(balances) / len(balances) for balances in final_balances]
+    average_lowest_balances = [sum(balances) / len(balances) for balances in lowest_balances]
+
+    print(f'final balances {final_balances}')
+    print('\n')
+    print(f'lowest balances {lowest_balances}')
+    print('\n')
+    return average_final_balances, average_lowest_balances
+
+
+
+
+
+
+
 
 
 
 if __name__ == "__main__":
-    run_multiple_simulations(num_simulations=30,num_rounds= 50, num_decks=7,plot_with_gauss= True,Print= False)
+    # run_multiple_simulations_one_player(num_simulations=30,num_rounds= 50, num_decks=7,plot_with_gauss= True,Print= False)
+    
+    final_balances, lowest_balance = run_multiple_simulations_multiple_players(num_rounds=30,num_of_players=3,num_simulations=5)
+
+    print(f'final balances: {final_balances}')
+    print('\n')
+    print(f'lowest balances: {lowest_balance}')
