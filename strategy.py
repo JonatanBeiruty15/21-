@@ -1,14 +1,19 @@
 import pandas as pd
 from class_of_cards import Card, Hand, Shoe
 from openpyxl import load_workbook
+import os
 
 
 
 
 
-def find_blackjack_move(hand, dealer_card, true_count=0,Print =False):
+def find_blackjack_move(hand, dealer_card, true_count=0,Print =False,version=1):
     # Assuming Card is defined elsewhere with attributes suit and value
-    strategy_sheets = pd.ExcelFile('Strategy1.xlsx')
+    path = f'strategies/Strategy_{version}.xlsx'
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Version {version} doesn't exist.")
+    
+    strategy_sheets = pd.ExcelFile(path)
     
     # Select the right sheet based on true count
     if true_count < -1:
