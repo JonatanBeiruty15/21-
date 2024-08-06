@@ -33,7 +33,7 @@ class Player:
     
 
 
-    def player_turn(self, shoe, dealer_card,true_count ,initial_bet = 1):
+    def player_turn(self, shoe, dealer_card,true_count ,initial_bet = 1,strategy_version = 1):
         # Deal an initial hand and set a starting bet
         initial_hand = shoe.deal_initial_hand()
 
@@ -59,7 +59,7 @@ class Player:
 
 # Prepare to play all hands, initializing results list
 
-        self.play_player_hands(dealer_card= dealer_card, shoe = shoe,true_count= true_count)
+        self.play_player_hands(dealer_card= dealer_card, shoe = shoe,true_count= true_count,strategy_version=strategy_version)
 
      
     
@@ -67,14 +67,14 @@ class Player:
                  
 
 
-    def play_player_hands(self, dealer_card, shoe,true_count):
+    def play_player_hands(self, dealer_card, shoe,true_count,strategy_version):
 
         hands = self.hands
         if hands == [] or not hands[0].status['active']:
             return 
 
         hand = hands[0]
-        move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count)
+        move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count,version=strategy_version)
         '''
         In test I use the find_move_test fucntion
         '''
@@ -84,7 +84,7 @@ class Player:
             hand.hit(shoe)
             if hand.calculate_sum() > 21:
                 self.balance -= hand.amount_of_bet  
-                self.hands.remove(hand)  # Use remove instead of pop
+                self.hands.remove(hand)  
 
             if hand.calculate_sum() == 21:
                 hand.status['active'] = False
@@ -171,7 +171,7 @@ class Dealer(Player):
     def calculate_money(self,players):
         pass
 
-    def round(self,shoe,player, Print = False,deck_penetration = 3,num_of_decks = 7):
+    def round(self,shoe,player, Print = False,deck_penetration = 3,num_of_decks = 7,strategy_version = 1):
 
         num_of_cards_before_shuffel = int(52 * deck_penetration)
         if num_of_decks *52 < num_of_cards_before_shuffel:
@@ -187,7 +187,7 @@ class Dealer(Player):
 
 
 
-        player.player_turn(shoe= shoe,dealer_card = dealer_card,true_count=true_count)
+        player.player_turn(shoe= shoe,dealer_card = dealer_card,true_count=true_count,strategy_version = strategy_version)
 
         if Print:
             print(f"{player.name}'s hands:",player.hands)

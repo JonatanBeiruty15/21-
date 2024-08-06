@@ -73,7 +73,7 @@ def update_progress(q, total):
 
 
 
-def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=False, deck_penetration=4, num_of_players=4):
+def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=False, deck_penetration=4, num_of_players=4,strategy_version = 1):
     # Initialize players and a shoe
     start_time = time.time()
     lowest_balance = [0] * num_of_players
@@ -83,7 +83,7 @@ def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=Fals
 
     for round in range(num_of_rounds):
         for i, player in enumerate(players):
-            dealer.round(player=player, shoe=shoe, Print=Print, deck_penetration=deck_penetration, num_of_decks=num_decks)
+            dealer.round(player=player, shoe=shoe, Print=Print, deck_penetration=deck_penetration, num_of_decks=num_decks,strategy_version= strategy_version)
             if player.balance < lowest_balance[i]:
                 lowest_balance[i] = player.balance
 
@@ -107,7 +107,7 @@ def run_simulation_batch_multi_player(num_simulations, num_rounds, num_decks, Pr
 
 
 
-def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, num_decks=7, num_of_players=4, plot_with_gauss=True, Print=False, deck_penetration=4):
+def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, num_decks=7, num_of_players=4, plot_with_gauss=True, Print=False, deck_penetration=4,strategy_version =1):
     start_time = time.time()  # Start timing here
     num_processes = 4
     simulations_per_process = num_simulations // num_processes
@@ -120,7 +120,7 @@ def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, nu
     watcher.start()
 
     results = pool.starmap(run_simulation_batch_multi_player, [
-        (simulations_per_process, num_rounds, num_decks, Print, deck_penetration, progress_queue, num_of_players)
+        (simulations_per_process, num_rounds, num_decks, Print,strategy_version, deck_penetration, progress_queue, num_of_players)
         for _ in range(num_processes)
     ])
 
@@ -152,10 +152,12 @@ def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, nu
     with open(filename, 'w') as file:
         file.write("Simulation Parameters:\n")
         file.write(f"Number of Simulations: {num_simulations}\n")
+        file.write(f"Strategy version: {strategy_version}\n")
         file.write(f"Number of Rounds: {num_rounds}\n")
         file.write(f"Number of Decks: {num_decks}\n")
         file.write(f"Number of Players: {num_of_players}\n")
         file.write(f"Deck Penetration: {deck_penetration}\n")
+
         file.write("\n\n")
         for player_index in range(num_of_players):
             file.write(f"Player {player_index + 1} Results:\n")
