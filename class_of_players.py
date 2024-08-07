@@ -75,10 +75,8 @@ class Player:
 
         hand = hands[0]
         move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count,version=strategy_version)
-        '''
-        In test I use the find_move_test fucntion
-        '''
-        # move_to_make = find_move_test(hand=hand, dealer_card=dealer_card, true_count=true_count)
+        # print(f'move to play is {move_to_make}')
+        
 
         if move_to_make == 'H':
             hand.hit(shoe)
@@ -97,7 +95,7 @@ class Player:
         
         elif move_to_make == 'S':
             hand.stand()
-            self.play_player_hands(dealer_card= dealer_card, shoe=shoe,true_count= true_count)
+            self.play_player_hands(dealer_card= dealer_card, shoe=shoe,true_count= true_count,strategy_version=strategy_version)
 
         elif move_to_make == 'D':
             if hand.status['can_double']:
@@ -142,12 +140,11 @@ class Player:
 
         else:
             print(f'tried to do {move_to_make}')
-            print("Invalid move.")
-            exit()
+            raise ValueError("Invalid move.")
         
 
         true_count = shoe.true_count()
-        self.play_player_hands(dealer_card= dealer_card, shoe=shoe,true_count= true_count) 
+        self.play_player_hands(dealer_card= dealer_card, shoe=shoe,true_count= true_count,strategy_version=strategy_version) 
 
 
     def new_round(self):

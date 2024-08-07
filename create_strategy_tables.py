@@ -184,7 +184,7 @@ def test_a_move_with_dealer_avrage(players_cards, dealer_card, move_to_test, tru
 
     for i in range(repetitions):
         players_cards = [card1,card2]
-        num_of_decks = random.randint(4,6)
+        num_of_decks = random.randint(3,6)
         shoe = generate_shoe_with_true_count(true_count=true_count, num_of_decks=num_of_decks)
         jb_hand = Hand(shoe=shoe, cards=players_cards, amount_of_bet=1)
         jb.hands = [jb_hand]
@@ -238,10 +238,10 @@ def build_a_strategy_table(true_count=0,repetitions = 200):
 
         for value in tqdm(range_values, desc=f"{hand_type}"):
             cards = hand_creator(value)
-            card3 , card4 = cards[0] , cards[1]
-            if card3.suit != 'Hearts' or card4.suit != 'Hearts':
-                print(card3,card4)
-                exit()
+            # card3 , card4 = cards[0] , cards[1]
+            # if card3.suit != 'Hearts' or card4.suit != 'Hearts':
+            #     print(card3,card4)
+            #     exit()
             for dealer_value in tqdm(range(2, 12), desc="Dealer Card Progress", leave=False):  # Including Ace as 11
                 dealer_card = Card(suit='Hearts', value= str(dealer_value))
                 if dealer_value == 11:

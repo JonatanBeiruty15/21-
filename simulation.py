@@ -52,7 +52,7 @@ def plot_with_gaussian(data_lists, title, filename, x_label, y_label, plot_with_
 
     # Save the plot
     plt.savefig(filename)
-    plt.show()
+    # plt.show()
 
 
 
@@ -97,10 +97,10 @@ def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=Fals
 
 
 
-def run_simulation_batch_multi_player(num_simulations, num_rounds, num_decks, Print, deck_penetration, progress_queue, num_of_players):
+def run_simulation_batch_multi_player(num_simulations, num_rounds, num_decks, Print, deck_penetration, progress_queue, num_of_players,strategy_version):
     results = []
     for _ in range(num_simulations):
-        result = game_simulation_multiple_players(num_rounds, num_decks, Print, deck_penetration, num_of_players)
+        result = game_simulation_multiple_players(num_rounds, num_decks, Print, deck_penetration, num_of_players,strategy_version=strategy_version)
         results.append(result)
         progress_queue.put(1)  # signal progress
     return results
@@ -120,7 +120,7 @@ def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, nu
     watcher.start()
 
     results = pool.starmap(run_simulation_batch_multi_player, [
-        (simulations_per_process, num_rounds, num_decks, Print,strategy_version, deck_penetration, progress_queue, num_of_players)
+        (simulations_per_process, num_rounds, num_decks, Print, deck_penetration, progress_queue, num_of_players, strategy_version)
         for _ in range(num_processes)
     ])
 
@@ -184,14 +184,15 @@ def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, nu
 
 
 if __name__ == "__main__":
-    num_of_players = 1
+    num_of_players = 3
     num_of_rounds = 30
-    num_of_sim = 10
+    num_of_sim = 1000
     num_decks = 7
     deck_penetration = 4
+    strategy_version = 2
 
 
     multi_process_multi_player_simulation(num_simulations=num_of_sim,num_rounds=num_of_rounds,
-                                          num_of_players= num_of_players)
+                                          num_of_players= num_of_players,strategy_version=strategy_version)
     
  

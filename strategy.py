@@ -18,8 +18,8 @@ def find_blackjack_move(hand, dealer_card, true_count=0,Print =False,version=1):
     # Select the right sheet based on true count
     if true_count < -1:
         sheet_name = "-1"
-    elif true_count > 4:
-        sheet_name = "4"
+    elif true_count > 3:
+        sheet_name = "3"
     else:
         sheet_name = str(true_count)
     
