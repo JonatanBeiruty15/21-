@@ -9,6 +9,10 @@ import json
 import os
 import pandas as pd
 from io import StringIO
+import multiprocessing 
+from multiprocessing import Manager, Pool
+from functools import partial  
+
 
 
 def rotate_first_to_last(lst):
@@ -172,6 +176,15 @@ def test_a_move_with_dealer_one_time(player,dealer,move_to_test,shoe,true_count,
 
 
 
+
+
+
+
+
+
+
+
+
 def test_a_move_with_dealer_avrage(players_cards, dealer_card, move_to_test, true_count, Print=False, repetitions=50):
     card1 , card2 = players_cards[0] , players_cards[1]
     start_time = time.time()  # Start timing the function
@@ -180,8 +193,6 @@ def test_a_move_with_dealer_avrage(players_cards, dealer_card, move_to_test, tru
     dealer = Dealer()   
     final_balances = []
     
-    
-
     for i in range(repetitions):
         players_cards = [card1,card2]
         num_of_decks = random.randint(3,6)
@@ -190,7 +201,6 @@ def test_a_move_with_dealer_avrage(players_cards, dealer_card, move_to_test, tru
         jb.hands = [jb_hand]
         dealer_hand = Hand(cards=[dealer_card], shoe=shoe)
         dealer.hands = [dealer_hand]
-
         final_balance = test_a_move_with_dealer_one_time(player=jb, dealer=dealer, move_to_test=move_to_test, shoe=shoe, true_count=true_count, Print=Print)
         final_balances.append(final_balance)
         jb.balance = 0
@@ -238,10 +248,7 @@ def build_a_strategy_table(true_count=0,repetitions = 200):
 
         for value in tqdm(range_values, desc=f"{hand_type}"):
             cards = hand_creator(value)
-            # card3 , card4 = cards[0] , cards[1]
-            # if card3.suit != 'Hearts' or card4.suit != 'Hearts':
-            #     print(card3,card4)
-            #     exit()
+ 
             for dealer_value in tqdm(range(2, 12), desc="Dealer Card Progress", leave=False):  # Including Ace as 11
                 dealer_card = Card(suit='Hearts', value= str(dealer_value))
                 if dealer_value == 11:
@@ -284,7 +291,7 @@ def store_results(result_dict, key, dealer_value, best_move, best_balance,hand_t
 
 
 
-def determine_best_move(cards, dealer_card, moves, true_count, repetitions, epsilon=0.001):
+def determine_best_move(cards, dealer_card, moves, true_count, repetitions):
     best_balance = float('-inf')
     best_move = None
     balance_details = {}
@@ -294,28 +301,11 @@ def determine_best_move(cards, dealer_card, moves, true_count, repetitions, epsi
         average_balance = test_a_move_with_dealer_avrage(players_cards=cards,
                                                          dealer_card=dealer_card, move_to_test=move, 
                                                          true_count=true_count, repetitions=repetitions)
+        
         balance_details[move] = average_balance
         if average_balance > best_balance:
             best_balance = average_balance
             best_move = move
-
-    # Check if other moves are close to the best balance within epsilon
-    # close_moves = [move for move, balance in balance_details.items() if (best_balance - balance) < epsilon ]
-
-    # If close moves are found, rerun with higher repetitions for these moves
-    # if close_moves:
-    #     # print(f"Re-evaluating moves: {close_moves} due to close balances.")
-    #     for move in close_moves:
-    #         # Recalculate with increased repetitions
-    #         new_repetitions = min(5000, repetitions * 2)
-    #         average_balance = test_a_move_with_dealer_avrage(players_cards=cards,
-    #                                                          dealer_card=dealer_card, move_to_test=move, 
-    #                                                          true_count=true_count, repetitions=new_repetitions)
-    #         # Update if a new better result is found
-    #         if average_balance > best_balance:
-    #             best_balance = average_balance
-    #             best_move = move
-        # print(f"Updated best move to {move} with a balance of {best_balance} after extended simulation.")
 
     # Handle the case where no best move is determined
     if best_move is None:
@@ -383,5 +373,20 @@ def csv_to_excel(csv_file_path):
 
 if __name__ == '__main__':
 
-    build_a_strategy_table(repetitions=4000,true_count=-1 )
+
+
+
+    build_a_strategy_table(repetitions=50,true_count= 0 )
     # csv_to_excel('blackjack_strategy_results_true_count_0.csv')
+
+
+
+    # card1, card2 = Card(suit='Hearts', value=7), Card(suit='Hearts', value=7)
+    # player_cards = [card1, card2]
+    # dealer_card = Card(suit='Hearts', value=7)
+    # move_to_test = 'SP'
+    # true_count = 0
+    # repetitions = 200
+    
+
+  

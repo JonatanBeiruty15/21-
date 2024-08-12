@@ -7,7 +7,6 @@ import time
 
 
 
-
 class Card:
     def __init__(self, suit, value):
         self.suit = suit
@@ -17,12 +16,17 @@ class Card:
         elif value == 'Ace':
             self.value = 11
         else:
-            self.value = value
+            self.value = int(value)
 
     def __repr__(self):
         # Adjust the representation to show numeric value for face cards if needed
         return f"{self.value} of {self.suit}"
 
+    def __eq__(self, other):
+        # Return True if the values of the two cards are the same
+        if isinstance(other, Card):
+            return self.value == other.value
+        return False
 
 
 
@@ -279,6 +283,10 @@ class Hand:
         else:
             return str(int(card1.value) + int(card2.value))
 
+
+
+
+
     def __repr__(self):
         return f"Hand({self.cards}) with bet: {self.amount_of_bet}"
 
@@ -363,42 +371,48 @@ class Hand:
 
 
 
-
-def create_solid_hand(total_value:int):
+def create_solid_hand(total_value: int):
     '''
-    creates a list of 2 cards
-    of solid type meaning no Ace or to same cards
-
+    Creates a list of cards of solid type, meaning no Ace or two same cards.
+    For a total value of 20, it specifically creates a hand from the cards 10, 2, and 8.
     '''
-    if total_value < 5 or total_value > 19 or type(total_value) != int:
-        raise ValueError("Total value must be between 5 and 19 and an integer.")
+    if total_value < 5 or total_value > 20 or type(total_value) != int:
+        raise ValueError("Total value must be between 5 and 20 and an integer.")
     
     card_values = {
         '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
         '10': 10, 'Jack': 10, 'Queen': 10, 'King': 10
     }
 
-    if total_value > 11:
-        card1 = Card(suit='Hearts',value=10)
+    # Special case for a total of 20
+    if total_value == 20:
+        cards = [
+            Card(suit='Hearts', value='10'),
+            Card(suit='Diamonds', value='2'),
+            Card(suit='Clubs', value='8')
+        ]
     else:
-        card1 = Card(suit='Hearts',value=2)
+        # Select the first card
+        if total_value > 11:
+            card1 = Card(suit='Hearts', value='10')
+        else:
+            card1 = Card(suit='Hearts', value='2')
+        
+        # Calculate the value of the second card based on the total desired
+        second_card_value = total_value - int(card1.value)
+        second_card_value = str(second_card_value)
+        card2 = Card(suit='Hearts', value=second_card_value)
 
-
-    second_card_value = total_value - card1.value
-    second_card_value = str(second_card_value)
-    card2 = Card(suit='Hearts',value=second_card_value)
-
-    cards = [card1,card2]
+        cards = [card1, card2]
+    
     return cards
-
-
 
 
 def create_soft_hand(second_card_value:int):
     '''
     creates a list of 2 cards that the  first is an ACE
     '''
-    if second_card_value < 2 or second_card_value > 9 or type(second_card_value) != int:
+    if second_card_value < 2 or second_card_value > 10 or type(second_card_value) != int:
         raise ValueError("The second card's value must be between 2 and 9 and an integer.")
 
     card1 = Card(suit='Hearts',value='Ace')
@@ -407,34 +421,44 @@ def create_soft_hand(second_card_value:int):
     cards = [card1,card2]
     return cards
 
-
 def create_a_split_hand(card_value:int):
-
     '''
-    creates a list of 2 cards of the same value
+    Creates a list of 2 cards of the same value.
+    Accepts a card value between 2 and 11, where 11 represents Ace.
     '''
-    if card_value < 2 or card_value > 10 or type(card_value) != int:
-        raise ValueError("The  card's value must be between 2 and 10 and an integer.")
+    # Check for valid integer inputs within the required range.
+    if card_value < 2 or card_value > 11 or type(card_value) != int:
+        raise ValueError("The card's value must be between 2 and 11 and must be an integer.")
+    
+    # Determine the card representation based on the value.
+    if card_value == 11:
+        card_representation = 'Ace'
+    else:
+        card_representation = str(card_value)
 
-
-    card = Card(suit='Hearts',value= str(card_value))
-    cards = [card,card]
+    # Create two cards with the same value.
+    card = Card(suit='Hearts', value=card_representation)
+    cards = [card, card]
     return cards
 
 
 
 
 if __name__ == '__main__':
-    card1 = Card(suit='Hearts',value='Ace')
-    card2 = Card(suit='Hearts',value='2')
+    card1 = Card(suit='Hearts',value='King')
+    card2 = Card(suit='Hearts',value='10')
     card3 = Card(suit='Hearts',value='3')
 
-    cards = [card1,card1,card1,card1,card3,card3,card3,card3,card3,card3]
+    cards = [card1,card2]
 
     hand = Hand(cards=cards)
 
     print(hand.type_of_hand())
 
+
+
+
+    
     
 
 

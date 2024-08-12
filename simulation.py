@@ -185,11 +185,11 @@ def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, nu
 
 if __name__ == "__main__":
     num_of_players = 3
-    num_of_rounds = 30
-    num_of_sim = 1000
+    num_of_rounds = 50
+    num_of_sim = 100
     num_decks = 7
     deck_penetration = 4
-    strategy_version = 2
+    strategy_version = 1
 
 
     multi_process_multi_player_simulation(num_simulations=num_of_sim,num_rounds=num_of_rounds,

@@ -1,5 +1,6 @@
 from class_of_cards import Shoe , Hand , Card 
 from strategy import find_blackjack_move ,find_move_test
+from tensor_strategies import find_blackjack_move_tensor
 
 
 def rotate_first_to_last(lst):
@@ -74,9 +75,15 @@ class Player:
             return 
 
         hand = hands[0]
-        move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count,version=strategy_version)
-        # print(f'move to play is {move_to_make}')
+        # old_move_to_make = find_blackjack_move(hand=hand, dealer_card=dealer_card, true_count=true_count,version=strategy_version)
+
         
+        
+
+        # # new faster method
+        move_to_make = find_blackjack_move_tensor(hand=hand, dealer_card=dealer_card, true_count=true_count,strategy_version=strategy_version)
+
+    
 
         if move_to_make == 'H':
             hand.hit(shoe)
@@ -140,6 +147,9 @@ class Player:
 
         else:
             print(f'tried to do {move_to_make}')
+            print(f'the true count was {true_count}')
+            print(f'the hand was {hand.cards}')
+            print(f'the dealer had {dealer_card}')
             raise ValueError("Invalid move.")
         
 
