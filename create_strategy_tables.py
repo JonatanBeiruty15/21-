@@ -53,7 +53,9 @@ def play_what_is_known(player,dealer_card,shoe,true_count):
         # print(f'the move to make is {move_to_make}')
 
         if not move_to_make in ['SP','D','H','S']:
+            print(f'move is not legal {move_to_make}')
             move_to_make = random.choice(['H', 'S'])
+            
 
         if move_to_make != 'SP':
             hand.play_move(move_to_make=move_to_make,shoe = shoe)

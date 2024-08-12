@@ -78,32 +78,49 @@ def build_a_strategy_tensor_from_excel(strategy_version=1):
 
 
 def retrieve_move_from_tensor(strategy_tensor, true_count_index, hand_index, dealer_card_index):
-    # Access the tensor at the specified indices
-    move_number = strategy_tensor[true_count_index, hand_index, dealer_card_index, 0]
-    if move_number == 0:
-        print(f'move number is {move_number}')
-        print(f'true count index is {true_count_index} hand index is {hand_index} , dealer card index is {dealer_card_index}')
+    # Access the tensor at the specified indices, ensuring to grab the first element of the last dimension
+    move_data = strategy_tensor[true_count_index, hand_index, dealer_card_index]
+    move_number = move_data[0]  # This accesses the first element, regardless of the length of the last dimension
+    
+    # if move_number == 0:
+    #     print(f'move number is {move_number}')
+    #     print(f'true count index is {true_count_index}, hand index is {hand_index}, dealer card index is {dealer_card_index}')
     
     # Convert the number back to a move string using the previously defined conversion function
     move = number_to_move(int(move_number))
     
     return move
 
-
-
 def get_move(strategy_version, true_count_index, hand_index, dealer_card_index):
     # Construct the file path for the tensor
-    start_time = time.time()
-
     file_path = f'strategies_tensors/strategy_{strategy_version}.pt'
+    
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
     
     # Load the tensor from the file
     strategy_tensor = torch.load(file_path, weights_only=True)
     
     # Use the previously defined function to retrieve the move
     move = retrieve_move_from_tensor(strategy_tensor, true_count_index, hand_index, dealer_card_index)
-    end_time = time.time()
-    # print(f'took {end_time - start_time:.5f} seconds') 
+    
+    return move
+
+def get_move_test(true_count_index, hand_index, dealer_card_index):
+    # Construct the file path for the tensor
+    file_path = 'strategies_tensors/test_strategy.pt'
+    
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
+    
+    # Load the tensor from the file
+    strategy_tensor = torch.load(file_path, weights_only=True)
+    
+    # Use the previously defined function to retrieve the move
+    move = retrieve_move_from_tensor(strategy_tensor, true_count_index, hand_index, dealer_card_index)
+    
     return move
 
 
@@ -117,6 +134,15 @@ def find_blackjack_move_tensor(hand, dealer_card, true_count=0, strategy_version
     move  = get_move(strategy_version=strategy_version , true_count_index=true_count_index,hand_index= hand_index,dealer_card_index=dealer_card_index)
     return move
 
+
+
+def find_blackjack_move_tensor_test(hand, dealer_card, true_count=0):
+    type_of_hand = hand.type_of_hand()
+    hand_index = get_hand_index(type_of_hand)
+    dealer_card_index = int(dealer_card.value) - 2
+    true_count_index = get_true_count_index(true_count=true_count)
+    move = get_move_test(true_count_index=true_count_index, hand_index=hand_index, dealer_card_index=dealer_card_index)
+    return move
 
 
 def get_true_count_index(true_count):
@@ -147,8 +173,8 @@ def get_hand_index(hand_type):
 
 if __name__ == '__main__':
 
-    build_a_strategy_tensor_from_excel(strategy_version=1)
-    build_a_strategy_tensor_from_excel(strategy_version=2)
+    # build_a_strategy_tensor_from_excel(strategy_version=1)
+    # build_a_strategy_tensor_from_excel(strategy_version=2)
 
     # strategy_version = 2
     # true_count_index = 6 # Index for true count -3 in your example if it starts from -3
@@ -160,20 +186,21 @@ if __name__ == '__main__':
 
     
 
-    # card1 = Card('Hearts', '10')
-    # card2 = Card('Hearts', '10')
-    # # card3 = Card('Hearts', '4')
+    card1 = Card('Hearts', '4')
+    card2 = Card('Hearts', '4')
+    card3 = Card('Hearts', '8')
 
 
-    # dealers_card = Card('Hearts', 'Ace')
+    dealers_card = Card('Hearts', '7')
 
-    # cards = [card1,card2]
-    # hand = Hand(cards=cards)
+    cards = [card1,card2]
+    hand = Hand(cards=cards)
+    print(f'type of hand is {hand.type_of_hand()}')
 
 
 
-    # new_move =find_blackjack_move_tensor(hand= hand, dealer_card= dealers_card,true_count=0,strategy_version=1)
-    # print("The new recommended move is:", new_move)
+    test_move =find_blackjack_move_tensor_test(hand= hand, dealer_card= dealers_card,true_count=0)
+    print(f"The test recommended move when hand is {hand.cards} against a dealer {dealers_card} is:", test_move)
 
 
     # old_move =find_blackjack_move(hand= hand, dealer_card= dealers_card,true_count=0,version=1)
