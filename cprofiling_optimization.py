@@ -4,10 +4,10 @@ from functools import partial
 import time
 
 # Import your function or anything else required
-from create_strategy_tables import test_a_move_with_dealer_avrage, build_a_strategy_table
+# from create_strategy_tables import test_a_move_with_dealer_avrage, build_a_strategy_table
 from class_of_cards import Card, Hand
 
-
+from create_strategy_tables_tensor import build_a_strategy_table_tensor, test_a_move_with_dealer_average,test_a_move_with_dealer_average_multi_processing
 from strategy import find_blackjack_move
 
 from tensor_strategies import get_move, find_blackjack_move_tensor
@@ -73,12 +73,12 @@ def measure_time(func, iterations=100, *args, **kwargs):
 
 if __name__ == '__main__':
     # Example usage with a specific function
-    # card1, card2 = Card(suit='Hearts', value=7), Card(suit='Hearts', value=7)
-    # player_cards = [card1, card2]
-    # dealer_card = Card(suit='Hearts', value=7)
-    # hand =  Hand(cards = player_cards)
-    # # move_to_test = 'SP'
-    # true_count = 0
+    card1, card2 = Card(suit='Hearts', value=7), Card(suit='Hearts', value=7)
+    player_cards = [card1, card2]
+    dealer_card = Card(suit='Hearts', value=7)
+    hand =  Hand(cards = player_cards)
+    # move_to_test = 'SP'
+    true_count = 0
 
     # # profile_function(find_blackjack_move_tensor,hand=hand, dealer_card=dealer_card, true_count=true_count, strategy_version=1)
     # measure_time(find_blackjack_move_tensor,hand=hand, dealer_card=dealer_card, true_count=true_count, strategy_version=1)
@@ -93,8 +93,23 @@ if __name__ == '__main__':
 
 
 
-    profile_function(func=multi_process_multi_player_simulation,num_simulations=num_of_sim,num_rounds=num_of_rounds,
-                                          num_of_players= num_of_players,strategy_version=strategy_version)
+    # profile_function(func=multi_process_multi_player_simulation,num_simulations=num_of_sim,num_rounds=num_of_rounds,
+                                    #   num_of_players= num_of_players,strategy_version=strategy_version)
+
+    
+        # profile_function(func=build_a_strategy_table_tensor,repetitions = 100 , true_count = 0)
+    
+    
+    
+    move_to_test = 'H'
+    true_count = 1
+    repetitions =  25000 # Number of times the move is tested in one call 
+
+
+    measure_time(test_a_move_with_dealer_average_multi_processing, players_cards=player_cards, dealer_card=dealer_card,
+             move_to_test=move_to_test, true_count=true_count, Print=False, repetitions=repetitions, iterations=5)
 
 
 
+    # profile_function(test_a_move_with_dealer_average,players_cards=player_cards, dealer_card=dealer_card,
+    #          move_to_test=move_to_test, true_count=true_count, Print=False, repetitions=repetitions)

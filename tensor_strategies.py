@@ -4,6 +4,9 @@ from tqdm import tqdm  # This imports the tqdm class for progress bars
 from strategy import find_blackjack_move
 import os
 import time
+import pandas as pd
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl import Workbook
 
 
 
@@ -18,6 +21,91 @@ def move_to_number(move):
 def number_to_move(number):
     decoding = {1: 'S', 2: 'H', 3: 'D', 4: 'SP', 15: None}
     return decoding.get(number, "Invalid number")
+
+
+
+
+
+def build_strategy_excel_from_tensor(strategy_version=1):
+    tensor_dir = 'strategies_tensors'
+    if strategy_version == -15:
+        file_name = 'test_strategy.pt'
+    else:
+        file_name = f'strategy_{strategy_version}.pt'
+
+    file_path = os.path.join(tensor_dir, file_name)
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"No strategy file found at {file_path}")
+    
+    # Load the strategy tensor
+    strategy_tensor = torch.load(file_path,weights_only=True)
+    
+    workbook = Workbook()
+    workbook.remove(workbook.active)  # Removes the default sheet created with new workbook
+
+    hand_type_labels = {
+        'Solid Hands': ('', range(20, 4, -1)),
+        'Soft Hands': ('A,', range(2, 11)),
+        'Split Hands': ('', range(2, 12))
+    }
+
+
+    hand_type_to_index = {
+    "20": 0, "19": 1, "18": 2, "17": 3, "16": 4, "15": 5, "14": 6, "13": 7, "12": 8, "11": 9, "10": 10,
+    "9": 11, "8": 12, "7": 13, "6": 14, "5": 15,
+    "A,2": 16, "A,3": 17, "A,4": 18, "A,5": 19, "A,6": 20, "A,7": 21, "A,8": 22, "A,9": 23, "A,10": 24,
+    "2,2": 25, "3,3": 26, "4,4": 27, "5,5": 28, "6,6": 29, "7,7": 30, "8,8": 31, "9,9": 32, "10,10": 33,
+    "A,A": 34
+}
+
+    dealer_cards = [str(i) for i in range(2, 11)] + ['Ace']
+    
+    # Iterate over each true count
+    for true_count in range(strategy_tensor.shape[0]):
+        sheet = workbook.create_sheet(title=f'True Count {true_count - 3}')
+        df = pd.DataFrame(index=pd.Index([], name='Player Hand'), columns=dealer_cards)
+        
+        # Populate DataFrame for each hand type
+        for hand_type, (prefix, values) in hand_type_labels.items():
+            
+            
+            for value in values:
+                hand_label = prefix + str(value)
+                if hand_type == 'Split Hands':
+                    hand_label = hand_label + ','+hand_label
+                    if value == 11:
+                        hand_label = 'A,A'
+                
+                for dealer_index, dealer_card in enumerate(dealer_cards):
+                    
+  
+                    
+                    move_number = strategy_tensor[true_count, hand_type_to_index[hand_label], dealer_index, 0].item()
+                    
+                    move_symbol = number_to_move(move_number)
+                    df.at[hand_label, dealer_card] = move_symbol
+        
+        # Write DataFrame to the sheet in Excel workbook
+        for row in dataframe_to_rows(df, index=True, header=True):
+            sheet.append(row)
+    
+    base_name = os.path.splitext(file_name)[0]  # Remove the extension from the tensor file name
+    excel_path = f'{base_name}.xlsx'
+
+    workbook.save(excel_path)
+    workbook.close()
+    print(f"Strategy Excel file saved to {excel_path}")
+
+
+
+
+
+
+
+
+
 
 
 def build_a_strategy_tensor_from_excel(strategy_version=1):
@@ -81,12 +169,7 @@ def retrieve_move_from_tensor(strategy_tensor, true_count_index, hand_index, dea
     # Access the tensor at the specified indices, ensuring to grab the first element of the last dimension
     move_data = strategy_tensor[true_count_index, hand_index, dealer_card_index]
     move_number = move_data[0]  # This accesses the first element, regardless of the length of the last dimension
-    
-    # if move_number == 0:
-    #     print(f'move number is {move_number}')
-    #     print(f'true count index is {true_count_index}, hand index is {hand_index}, dealer card index is {dealer_card_index}')
-    
-    # Convert the number back to a move string using the previously defined conversion function
+ 
     move = number_to_move(int(move_number))
     
     return move
@@ -146,8 +229,8 @@ def find_blackjack_move_tensor_test(hand, dealer_card, true_count=0):
 
 
 def get_true_count_index(true_count):
-    # Clamp the true_count between -1 and 3
-    clamped_true_count = max(-1, min(3, true_count))
+    # Clamp the true_count between -3 and 3
+    clamped_true_count = max(-3, min(3, true_count))
     # Convert the clamped true count starting from 0 index (-3 maps to 0, 3 maps to 6)
     return clamped_true_count + 3
 
@@ -171,8 +254,17 @@ def get_hand_index(hand_type):
 
 
 
+
+
+
+
+
+
+
 if __name__ == '__main__':
 
+
+    print('start')
     # build_a_strategy_tensor_from_excel(strategy_version=1)
     # build_a_strategy_tensor_from_excel(strategy_version=2)
 
@@ -186,9 +278,9 @@ if __name__ == '__main__':
 
     
 
-    card1 = Card('Hearts', '4')
-    card2 = Card('Hearts', '4')
-    card3 = Card('Hearts', '8')
+    card1 = Card('Hearts', '9')
+    card2 = Card('Hearts', '9')
+    # card3 = Card('Hearts', '6')
 
 
     dealers_card = Card('Hearts', '7')
@@ -196,13 +288,14 @@ if __name__ == '__main__':
     cards = [card1,card2]
     hand = Hand(cards=cards)
     print(f'type of hand is {hand.type_of_hand()}')
+    version = 3
 
-
-
-    test_move =find_blackjack_move_tensor_test(hand= hand, dealer_card= dealers_card,true_count=0)
+    true_count =-3
+    test_move =find_blackjack_move_tensor(hand= hand, dealer_card= dealers_card,true_count=true_count,strategy_version=version)
     print(f"The test recommended move when hand is {hand.cards} against a dealer {dealers_card} is:", test_move)
 
 
-    # old_move =find_blackjack_move(hand= hand, dealer_card= dealers_card,true_count=0,version=1)
-    # print("The old recommended move is:", old_move)
+    build_strategy_excel_from_tensor(strategy_version=3)
+
+
     

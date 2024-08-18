@@ -38,9 +38,12 @@ class Player:
         # Deal an initial hand and set a starting bet
         initial_hand = shoe.deal_initial_hand()
 
-        if true_count > 1: # bet speard as the true count.
-            initial_hand.amount_of_bet = true_count 
         
+
+        if true_count > 2: # bet speard as the true count.
+            initial_hand.amount_of_bet = 5 
+        if true_count < 0:
+            initial_hand.amount_of_bet = 0
         else:
             initial_hand.amount_of_bet = initial_bet
 

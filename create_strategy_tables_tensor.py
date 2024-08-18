@@ -1,5 +1,5 @@
 from class_of_cards import Shoe , Hand , Card , generate_shoe_with_true_count,create_a_split_hand,create_soft_hand,create_solid_hand
-from tensor_strategies import find_blackjack_move_tensor, find_blackjack_move_tensor_test , move_to_number , number_to_move ,get_true_count_index,get_hand_index
+from tensor_strategies import find_blackjack_move_tensor, find_blackjack_move_tensor_test , move_to_number , number_to_move ,get_true_count_index,get_hand_index,build_strategy_excel_from_tensor
 import time
 import random
 from class_of_players import Player , Dealer
@@ -10,6 +10,8 @@ import os
 import pandas as pd
 from io import StringIO
 import torch
+from functools import partial
+import multiprocessing
 
 
 
@@ -203,7 +205,6 @@ def test_a_move_with_dealer_average(players_cards, dealer_card, move_to_test, tr
         jb.hands = [jb_hand]
         dealer_hand = Hand(cards=[dealer_card], shoe=shoe)
         dealer.hands = [dealer_hand]
-
         final_balance = test_a_move_with_dealer_one_time(player=jb, dealer=dealer, move_to_test=move_to_test, shoe=shoe, true_count=true_count, Print=Print)
         final_balances.append(final_balance)
         jb.balance = 0  # Reset the balance after each simulation
@@ -217,6 +218,60 @@ def test_a_move_with_dealer_average(players_cards, dealer_card, move_to_test, tr
         return 0
 
     return sum(final_balances) / len(final_balances)
+
+
+
+
+
+
+'''
+multi processing better for large number of repetitions around 25,000
+'''
+
+def worker_test_move(i, players_cards, dealer_card, move_to_test, true_count, Print):
+    # Create a fresh copy of the player cards for this iteration
+    current_player_cards = players_cards[:]
+    jb = Player(name='JB', initial_balance=0)
+    dealer = Dealer()
+    num_of_decks = random.randint(3,6)
+    shoe = generate_shoe_with_true_count(true_count=true_count, num_of_decks=num_of_decks)
+    jb_hand = Hand(shoe=shoe, cards=current_player_cards, amount_of_bet=1)
+    jb.hands = [jb_hand]
+    dealer_hand = Hand(cards=[dealer_card], shoe=shoe)
+    dealer.hands = [dealer_hand]
+    final_balance = test_a_move_with_dealer_one_time(player=jb, dealer=dealer, move_to_test=move_to_test, shoe=shoe, true_count=true_count, Print=Print)
+    return final_balance
+
+
+def test_a_move_with_dealer_average_multi_processing(players_cards, dealer_card, move_to_test, true_count, Print=False, repetitions=50):
+    start_time = time.time()  # Start timing the function
+
+    # Determine the optimal number of processes
+    num_processes = min(multiprocessing.cpu_count(), 4)
+
+    # Setup multiprocessing pool with the calculated number of processes
+    pool = multiprocessing.Pool(processes=num_processes)
+    
+    # Create tasks for each repetition
+    tasks = [(i, players_cards, dealer_card, move_to_test, true_count, Print) for i in range(repetitions)]
+    
+    # Map the worker function across all tasks
+    final_balances = pool.starmap(worker_test_move, tasks)
+
+    pool.close()
+    pool.join()
+
+    total_duration = time.time() - start_time  # Calculate the total duration of the test
+    if Print:
+        print(f"The move '{move_to_test}' was tested {repetitions} times.")
+        print(f"Total duration: {total_duration:.2f} seconds.")
+
+    if not final_balances:  # Avoid division by zero if final_balances is empty
+        return 0
+
+    return sum(final_balances) / len(final_balances)
+
+
 
 
 
@@ -270,25 +325,32 @@ def save_to_tensor(sorted_balances, strategy_tensor, tc_index, hand_index, dc_in
 
 
 def build_a_strategy_table_tensor(true_count=0, repetitions=50):
-
     output_dir = 'strategies_tensors'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)   
-
-
-
-    tc_index = get_true_count_index(true_count=true_count)
-
-    num_true_counts = 7  # True counts from -3 to 3
-    num_hand_types = 35 # 16 solid, 8 soft, 10 split 1 BJ
-    num_dealer_cards = 10  # Dealer cards from 2 to 11 (Ace considered as 11)
-    moves_with_balances = 8  # 4 moves each next to its balance starting with the move with the highest balance going down
-
-    strategy_tensor = torch.zeros((num_true_counts, num_hand_types, num_dealer_cards, moves_with_balances))
-
-
     file_path = f"{output_dir}/test_strategy.pt"
-    torch.save(strategy_tensor, file_path)
+    tc_index = get_true_count_index(true_count=true_count)
+    # Ensure the output directory exists
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Check if the tensor file already exists
+    if os.path.isfile(file_path):
+        # Load the tensor from the file, using `torch.load` with `map_location` to ensure it's loaded to the correct device
+        strategy_tensor = torch.load(file_path, map_location=torch.device('cpu'),weights_only= True)
+    else:
+        # Get the index for the true count (assuming get_true_count_index is defined elsewhere)
+        
+
+        # Define the dimensions of the tensor
+        num_true_counts = 7  # True counts from -3 to 3
+        num_hand_types = 35  # 16 solid, 8 soft, 10 split 1 BJ
+        num_dealer_cards = 10  # Dealer cards from 2 to 11 (Ace considered as 11)
+        moves_with_balances = 8  # 4 moves each next to its balance starting with the move with the highest balance going down
+
+        # Create the tensor initialized to zeros
+        strategy_tensor = torch.zeros((num_true_counts, num_hand_types, num_dealer_cards, moves_with_balances))
+
+        # Save the newly created tensor to the file
+        torch.save(strategy_tensor, file_path)
 
     moves = ['H', 'S', 'D']  # Default moves for most hands
 
@@ -314,11 +376,8 @@ def build_a_strategy_table_tensor(true_count=0, repetitions=50):
             type_of_hand = hand_of_player.type_of_hand()
             hand_index = get_hand_index(type_of_hand)
             
-
             for dc_index, dealer_value in enumerate(range(2, 12), start=0):  # Including Ace as 11
                 dealer_card = Card(suit='Hearts', value= str(dealer_value))
-
-
 
                 if dealer_value == 11:
                     dealer_card = Card(suit='Hearts', value='Ace')
@@ -326,31 +385,40 @@ def build_a_strategy_table_tensor(true_count=0, repetitions=50):
               
                 moves_details = find_expected_balances_of_moves(cards=cards, dealer_card=dealer_card, moves=current_moves,
                                                               true_count=true_count, repetitions=repetitions)
-               
-
 
                 save_to_tensor(sorted_balances=moves_details,strategy_tensor=strategy_tensor,tc_index=tc_index,hand_index=hand_index,dc_index=dc_index)
-
-            
-            
-    
-
 
 
             torch.save(strategy_tensor, file_path)
 
 
+def generate_strategy_for_all_true_counts(repetitions=1000):
+    for true_count in range(-3, 4):  # Iterates from -3 to 3
+        print(f"Generating strategy for true count: {true_count}")
+        build_a_strategy_table_tensor(true_count=true_count, repetitions=repetitions)
+        build_strategy_excel_from_tensor(strategy_version=-15)
+
+
+
+
 
 if __name__ == '__main__':
 
+ 
+    true_count = -3
+    repetitions = 10
+    generate_strategy_for_all_true_counts(repetitions=repetitions)
+    # build_a_strategy_table_tensor(repetitions=repetitions,true_count= true_count )
+    # true_count = -3
+    # build_a_strategy_table_tensor(repetitions=repetitions,true_count= true_count )
+
+    
 
 
 
-    build_a_strategy_table_tensor(repetitions=1000,true_count= 0 )
-
-
-    # card1 = Card(suit='Heart',value='10')
-    # cards = [card1,card1]
+    # card1 = Card(suit='Heart',value='7')
+    # card2 = Card(suit='Heart',value='7')
+    # cards = [card1,card2]
     # hand = Hand(cards=cards,amount_of_bet=1)
     # player = Player(name='JB' ,initial_balance=0)
     # player.hands = [hand]
@@ -360,9 +428,11 @@ if __name__ == '__main__':
     # # dealer = Dealer(name='dealer')
     # # dealer.hands = [dealer_hand]
 
-    
+
+    # move_to_test = 'H'
+    # repetitions = 100000
 
     # # test_a_move_with_dealer_one_time(player=player,dealer=dealer,move_to_test='H',shoe=Shoe(),true_count=0,Print=True)
-    # avrage = test_a_move_with_dealer_average(players_cards=cards, dealer_card=dealer_card, move_to_test= 'SP', true_count=0, Print=False, repetitions=10)
+    # avrage = test_a_move_with_dealer_average(players_cards=cards, dealer_card=dealer_card, move_to_test= move_to_test, true_count=0, Print=False, repetitions=repetitions)
 
     # print(f'after 50 times the average of is {avrage}')

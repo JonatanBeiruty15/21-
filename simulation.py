@@ -11,8 +11,6 @@ import multiprocessing
 
 
 
-
-
 def plot_with_gaussian(data_lists, title, filename, x_label, y_label, plot_with_gauss):
     colors = ['blue', 'green', 'red', 'purple', 'orange', 'brown']  # Extend this list if you have more players
 
@@ -54,24 +52,11 @@ def plot_with_gaussian(data_lists, title, filename, x_label, y_label, plot_with_
     plt.savefig(filename)
     # plt.show()
 
-
-
-
-
-
-
-
-
 def update_progress(q, total):
     pbar = tqdm(total=total, desc='Progress Bar')
     for _ in iter(q.get, None):  # Terminates on 'None'
         pbar.update()
     pbar.close()
-
-
-
-
-
 
 def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=False, deck_penetration=4, num_of_players=4,strategy_version = 1):
     # Initialize players and a shoe
@@ -94,9 +79,6 @@ def game_simulation_multiple_players(num_of_rounds=1000, num_decks=7, Print=Fals
     final_balances = [player.balance for player in players]
     return final_balances, lowest_balance
 
-
-
-
 def run_simulation_batch_multi_player(num_simulations, num_rounds, num_decks, Print, deck_penetration, progress_queue, num_of_players,strategy_version):
     results = []
     for _ in range(num_simulations):
@@ -104,8 +86,6 @@ def run_simulation_batch_multi_player(num_simulations, num_rounds, num_decks, Pr
         results.append(result)
         progress_queue.put(1)  # signal progress
     return results
-
-
 
 def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, num_decks=7, num_of_players=4, plot_with_gauss=True, Print=False, deck_penetration=4,strategy_version =1):
     start_time = time.time()  # Start timing here
@@ -175,24 +155,20 @@ def multi_process_multi_player_simulation(num_simulations=100, num_rounds=10, nu
     plot_with_gaussian(final_balances, 'Frequency of Final Balances Across Simulations', 'final_balances_distribution.png', 'Final Balance', 'Frequency', plot_with_gauss)
     plot_with_gaussian(lowest_balances, 'Frequency of Lowest Balances Across Simulations', 'lowest_balances_distribution.png', 'Lowest Balance', 'Frequency', plot_with_gauss)
 
-
     return average_final_balances, average_lowest_balances
-
-
-
-
 
 
 if __name__ == "__main__":
     num_of_players = 3
-    num_of_rounds = 50
-    num_of_sim = 100
+    num_of_rounds = 30
+    num_of_sim = 60000
     num_decks = 7
-    deck_penetration = 4
-    strategy_version = 1
+    deck_penetration = 4 # the number of decks delt before shuffeling
+    strategy_version = 3
 
 
     multi_process_multi_player_simulation(num_simulations=num_of_sim,num_rounds=num_of_rounds,
-                                          num_of_players= num_of_players,strategy_version=strategy_version)
+                                          num_of_players= num_of_players,strategy_version=strategy_version,num_decks=num_decks
+                                          ,deck_penetration= deck_penetration)
     
  

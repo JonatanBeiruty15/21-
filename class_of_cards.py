@@ -143,7 +143,7 @@ class Shoe:
 
     # Return the integer value of the remaining decks (rounded down)
        
-        number_of_decks_remaining =  int(num_decks_remaining)
+        number_of_decks_remaining =  max(int(num_decks_remaining),1)
 
         true_count = int(running_count/number_of_decks_remaining)
 

@@ -1,6 +1,7 @@
-pandas
+pandas 
 openpyxl
 matplotlib
 scipy
 tqdm
 torch
+json

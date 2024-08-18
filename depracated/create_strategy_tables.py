@@ -10,8 +10,6 @@ import os
 import pandas as pd
 from io import StringIO
 import multiprocessing 
-from multiprocessing import Manager, Pool
-from functools import partial  
 
 
 
